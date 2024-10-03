@@ -89,9 +89,9 @@ int main(void) {
 
    // End timing
    tend = MPI_Wtime();
-
-   if(my_rank==0)
-    printf("\nTook %f ms to run\n", (tend-tstart)*1000);
+   
+   if (my_rank == 0)
+      printf("\nTook %f seconds to run\n", (tend - tstart));
 
    free(local_x);
    free(local_y);

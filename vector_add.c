@@ -37,17 +37,29 @@ int main(void) {
    srand(time(NULL));
 
    Read_n(&n);
+
+   // Start time measurement
+   clock_t start_time = clock();
+
    Allocate_vectors(&x, &y, &z, n);
-   
+
+   // Generate random vectors
    random_vector(x, n);
    random_vector(y, n);
    
    Print_vector(x, n, "\nElements of x are:");
    Print_vector(y, n, "\nElements of y are:");
 
+   // Perform the vector sum
    Vector_sum(x, y, z, n);
 
    Print_vector(z, n, "\nThe sum is:");
+
+   // End time measurement
+   clock_t end_time = clock();
+   double time_spent = (double)(end_time - start_time) / CLOCKS_PER_SEC;
+
+   printf("\nTook %f seconds to run\n", time_spent);
 
    free(x);
    free(y);
