@@ -41,6 +41,8 @@ void Parallel_vector_sum(double local_x[], double local_y[],
       double local_z[], int local_n);
 void Parallel_dot_product(double local_x[], double local_y[],
       int local_n, double *dot_product,  MPI_Comm comm);
+void Parallel_scalar_product(double scalar, double local_a[], double local_b[],
+      int local_n);
 
 void random_vector(double vector[], int N) {
     for(int i = 0; i < N; i++) {
@@ -53,6 +55,7 @@ int main(void) {
    int n, local_n;
    int comm_sz, my_rank;
    double *local_x, *local_y, *local_z;
+   double scalar = 2.0;
    MPI_Comm comm;
    double tstart, tend, dot_product;
 
@@ -96,6 +99,14 @@ int main(void) {
    if (my_rank == 0) {
       printf("\nDot product of x and y is: %f\n", dot_product);
    }
+
+  // Scale the vectors
+   Parallel_scalar_product(scalar, local_x, local_z, local_n);
+   Print_vector(local_z, local_n, n, "\nElements of x scaled are:", my_rank, comm);
+
+  // Scale the vectors
+   Parallel_scalar_product(scalar, local_y, local_z, local_n);
+   Print_vector(local_z, local_n, n, "\nElements of y scaled are:", my_rank, comm);
 
    // End timing
    tend = MPI_Wtime();
@@ -374,3 +385,16 @@ void Parallel_dot_product(
    // Perform the reduction to calculate the global sum
    MPI_Reduce(&local_sum, dot_product, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
 }  /* Parallel_dot_product */
+
+
+void Parallel_scalar_product(
+      double scalar,  /* in */
+      double local_a[],   /* in */
+      double local_b[], /* out */
+      int local_n        /* in */) {
+   
+   // Calculate the local sum of products
+   for (int i = 0; i < local_n; i++) {
+      local_b[i] = local_a[i] * scalar;
+   }
+}  /* Parallel_scalar_product */
