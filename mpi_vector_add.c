@@ -39,6 +39,8 @@ void Print_vector(double local_b[], int local_n, int n, char title[],
       int my_rank, MPI_Comm comm);
 void Parallel_vector_sum(double local_x[], double local_y[],
       double local_z[], int local_n);
+void Parallel_dot_product(double local_x[], double local_y[],
+      int local_n, double *dot_product,  MPI_Comm comm);
 
 void random_vector(double vector[], int N) {
     for(int i = 0; i < N; i++) {
@@ -52,7 +54,7 @@ int main(void) {
    int comm_sz, my_rank;
    double *local_x, *local_y, *local_z;
    MPI_Comm comm;
-   double tstart, tend;
+   double tstart, tend, dot_product;
 
    MPI_Init(NULL, NULL);
    comm = MPI_COMM_WORLD;
@@ -86,6 +88,14 @@ int main(void) {
    Parallel_vector_sum(local_x, local_y, local_z, local_n);
 
    Print_vector(local_z, local_n, n, "\nThe sum is:", my_rank, comm);
+
+   // Calculate the dot product
+
+   Parallel_dot_product(local_x, local_y, local_n, &dot_product, comm);
+
+   if (my_rank == 0) {
+      printf("\nDot product of x and y is: %f\n", dot_product);
+   }
 
    // End timing
    tend = MPI_Wtime();
@@ -336,3 +346,31 @@ void Parallel_vector_sum(
    for (local_i = 0; local_i < local_n; local_i++)
       local_z[local_i] = local_x[local_i] + local_y[local_i];
 }  /* Parallel_vector_sum */
+
+
+/*-------------------------------------------------------------------
+ * Function:  Parallel_dot_product
+ * Purpose:   Compute the dot product of two vectors in parallel.
+ * In args:   local_x:  local portion of vector x
+ *            local_y:  local portion of vector y
+ *            local_n:  size of local vectors
+ *            comm:     communicator containing all the processes
+ * Returns:   dot product
+ */
+void Parallel_dot_product(
+      double local_x[],  /* in */
+      double local_y[],  /* in */
+      int local_n,             /* in */
+      double *dot_product,     /* out */
+      MPI_Comm comm) {         /* in */
+   
+   double local_sum = 0.0;
+
+   // Calculate the local sum of products
+   for (int i = 0; i < local_n; i++) {
+      local_sum += local_x[i] * local_y[i];
+   }
+
+   // Perform the reduction to calculate the global sum
+   MPI_Reduce(&local_sum, dot_product, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
+}  /* Parallel_dot_product */
