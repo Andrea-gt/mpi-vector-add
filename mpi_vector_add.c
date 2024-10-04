@@ -29,7 +29,7 @@
 
 void Check_for_error(int local_ok, char fname[], char message[],
       MPI_Comm comm);
-void Read_n(int* n_p, int* local_n_p, int my_rank, int comm_sz,
+void Read_n(int* n_p, double* scalar, int* local_n_p, int my_rank, int comm_sz,
       MPI_Comm comm);
 void Allocate_vectors(double** local_x_pp, double** local_y_pp,
       double** local_z_pp, int local_n, MPI_Comm comm);
@@ -54,8 +54,7 @@ void random_vector(double vector[], int N) {
 int main(void) {
    int n, local_n;
    int comm_sz, my_rank;
-   double *local_x, *local_y, *local_z;
-   double scalar = 2.0;
+   double *local_x, *local_y, *local_z, scalar;
    MPI_Comm comm;
    double tstart, tend, dot_product;
 
@@ -68,7 +67,7 @@ int main(void) {
    //n = 10000000;
    
    // Use Read_n to get the vector size
-   Read_n(&n, &local_n, my_rank, comm_sz, comm);
+   Read_n(&n, &scalar, &local_n, my_rank, comm_sz, comm);
 
    // Start timing
    tstart = MPI_Wtime();
@@ -176,6 +175,7 @@ void Check_for_error(
  */
 void Read_n(
       int*      n_p        /* out */,
+      double*   scalar_p        /* out */,
       int*      local_n_p  /* out */,
       int       my_rank    /* in  */,
       int       comm_sz    /* in  */,
@@ -186,8 +186,14 @@ void Read_n(
    if (my_rank == 0) {
       printf("What's the order of the vectors?\n");
       scanf("%d", n_p);
+
+      printf("Enter the scalar:\n");
+      scanf("%lf", scalar_p);
    }
+
    MPI_Bcast(n_p, 1, MPI_INT, 0, comm);
+   MPI_Bcast(scalar_p, 1, MPI_DOUBLE, 0, comm);
+
    if (*n_p <= 0 || *n_p % comm_sz != 0) local_ok = 0;
    Check_for_error(local_ok, fname,
          "n should be > 0 and evenly divisible by comm_sz", comm);
